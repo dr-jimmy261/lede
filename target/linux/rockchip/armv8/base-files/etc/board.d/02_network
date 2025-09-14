@@ -28,7 +28,7 @@ rockchip_setup_interfaces()
 	sharevdi,guangmiao-g4c|\
 	xunlong,orangepi-r1-plus|\
 	xunlong,orangepi-r1-plus-lts)
-		ucidef_set_interfaces_lan_wan 'eth1' 'eth0'
+		ucidef_set_interfaces_lan_wan 'eth0' 'eth1'
 		;;
 	armsom,sige1|\
 	armsom,sige3|\

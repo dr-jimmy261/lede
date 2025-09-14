@@ -163,16 +163,6 @@ define Device/bananapi_bpi-r3
 endef
 TARGET_DEVICES += bananapi_bpi-r3
 
-define Device/bananapi_bpi-r3-common
-  DEVICE_VENDOR := Bananapi
-  DEVICE_MODEL := BPI-R3 Mini
-  DEVICE_DTS_DIR := $(DTS_DIR)/
-  DEVICE_PACKAGES := e2fsprogs f2fsck mkf2fs \
-	kmod-hwmon-pwmfan kmod-mt7915e kmod-mt7986-firmware \
-	kmod-phy-airoha-en8811h kmod-usb3 mt7986-wo-firmware
-  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
-endef
-
 define Device/bananapi_bpi-r3-mini-emmc
   $(call Device/bananapi_bpi-r3-common)
   DEVICE_MODEL := BPI-R3 Mini (eMMC)
@@ -192,6 +182,33 @@ define Device/bananapi_bpi-r3-mini-nand
   KERNEL_IN_UBI := 1
 endef
 TARGET_DEVICES += bananapi_bpi-r3-mini-nand
+
+
+define Device/bananapi_bpi-r3-mini-TEST
+  DEVICE_VENDOR := Bananapi
+  DEVICE_MODEL := BPi-R3 MiniTEST
+  DEVICE_DTS := mt7986a-bananapi-bpi-r3-mini
+  DEVICE_DTS_CONFIG := config-mt7986a-bananapi-bpi-r3-mini
+  DEVICE_DTS_DIR := ../dts
+  DEVICE_DTC_FLAGS := --pad 4096
+  DEVICE_DTS_LOADADDR := 0x43f00000
+  DEVICE_PACKAGES := kmod-hwmon-pwmfan kmod-mt7986-firmware mt7986-wo-firmware \
+	kmod-nvme kmod-usb3 automount f2fsck mkf2fs \
+	kmod-usb-net-cdc-mbim kmod-usb-net-qmi-wwan kmod-usb-serial-option uqmi \
+	luci-proto-mbim luci-proto-qmi
+  KERNEL_LOADADDR := 0x44000000
+  KERNEL := kernel-bin | gzip
+  KERNEL_INITRAMFS := kernel-bin | lzma | \
+	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
+  KERNEL_INITRAMFS_SUFFIX := -recovery.itb
+  IMAGES := sysupgrade.itb
+  IMAGE_SIZE := $$(shell expr 64 + $$(CONFIG_TARGET_ROOTFS_PARTSIZE))m
+  IMAGE/sysupgrade.itb := append-kernel | \
+	fit gzip $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb external-static-with-rootfs | \
+	pad-rootfs | append-metadata
+endef
+TARGET_DEVICES += bananapi_bpi-r3-mini-TEST
+
 
 define Device/bananapi_bpi-r4-common
   DEVICE_VENDOR := Bananapi
