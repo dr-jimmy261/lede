@@ -4,6 +4,7 @@
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pinctrl/rockchip.h>
+#include <dt-bindings/leds/common.h>
 #include <dt-bindings/soc/rockchip,vop2.h>
 #include "rk3568.dtsi"
 
@@ -21,6 +22,22 @@
 
 	chosen: chosen {
 		stdout-path = "serial2:1500000n8";
+	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+
+		net-led {
+			label = "net-led";
+			gpios = <&gpio0 RK_PC4 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		work-led {
+			label = "work-led";
+			gpios = <&gpio0 RK_PC7 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "timer";
+		};
 	};
 
 	gmac0_xpcsclk: xpcs-gmac0-clock {
@@ -72,6 +89,7 @@
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
 		vin-supply = <&vcc3v3_pi6c>;
+		startup-delay-us = <50000>;
 	};
 
 	/* pi6c pcie clock generator */
@@ -84,6 +102,7 @@
 		regulator-name = "vcc3v3_pi6c";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
+		startup-delay-us = <200000>;
 		vin-supply = <&vcc_syson>;
 	};
 
@@ -232,6 +251,14 @@
 		post-power-on-delay-ms = <200>;
 		reset-gpios = <&gpio2 RK_PB1 GPIO_ACTIVE_LOW>;
 	};
+	
+	
+	firmware {
+	optee: optee {
+		compatible = "linaro,optee-tz";
+		method = "smc";
+		};
+	};
 };
 
 &combphy0 {
@@ -243,6 +270,7 @@
 };
 
 &combphy2 {
+	rockchip,sgmii-mac-sel = <0>;
 	status = "okay";
 };
 
@@ -298,8 +326,8 @@
 	snps,reset-gpio = <&gpio4 RK_PC0 GPIO_ACTIVE_LOW>;
 	snps,reset-active-low;
 	snps,reset-delays-us = <0 20000 100000>;
-	tx_delay = <0x30>;
-	rx_delay = <0x10>;
+	tx_delay = <0x38>;
+	rx_delay = <0x15>;
 	status = "okay";
 };
 
@@ -340,7 +368,8 @@
 		regulator-name = "vdd_cpu";
 		regulator-always-on;
 		regulator-boot-on;
-		regulator-min-microvolt = <800000>;
+		regulator-init-microvolt = <900000>;
+		regulator-min-microvolt = <810000>;
 		regulator-max-microvolt = <1150000>;
 		regulator-ramp-delay = <2300>;
 		vin-supply = <&vcc_syson>;
@@ -490,22 +519,29 @@
 	cap-sd-highspeed;
 	cap-sdio-irq;
 	keep-power-in-suspend;
+	disable-wp;
 	mmc-pwrseq = <&wifi_pwrseq>;
 	non-removable;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdmmc1_bus4 &sdmmc1_clk &sdmmc1_cmd>;
-	sd-uhs-sdr104;
+	status = "okay";
+	max-frequency = <50000000>;
+	cap-sdio-irq;
 	vmmc-supply = <&vcc3v3_sys>;
 	vqmmc-supply = <&vcc_1v8>;
+	sd-uhs-sdr25;
+	sd-uhs-sdr50;
+	no-mmc;
+	no-sd;
+	wakeup-source;
 	#address-cells = <1>;
 	#size-cells = <0>;
-	status = "okay";
 
-	wifi@1 {
+	ath10k: wifi@1 {
 		reg = <1>;
 		interrupt-parent = <&gpio2>;
 		interrupts = <RK_PB2 IRQ_TYPE_LEVEL_HIGH>;
-		interrupt-names = "host-wake";
+		status = "okay";
 	};
 };
 
@@ -604,7 +640,27 @@
 	};
 };
 
+&gpio4 {
+	aux-pwren {
+		gpio-hog;
+		gpios = <RK_PD2 GPIO_ACTIVE_HIGH>;
+		output-high;
+		line-name = "aux-pwren";
+        };
+};
+
 &xin32k {
-	pinctrl-names = "default";
+	clock-frequency = <32768>;
+	clock-output-names = "xin32k";
 	pinctrl-0 = <&clk32k_out1>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&xpcs {
+	status = "okay";
+};
+
+&cpu0_opp_table {
+
 };
